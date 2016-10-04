@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #include <Wire.h>
 #include <SSC.h>
 #include <SPI.h>
@@ -53,10 +55,10 @@ void setup()
   Serial.println(ssc.start());
 }
 
-void loop() 
+void loop()
 {
   current_time = 0.5 * iterator;
-  
+
   //  update pressure
   ssc.update();
 
@@ -78,6 +80,6 @@ void loop()
   if (!data.sync() || data.getWriteError()) {
     Serial.println("write error");
   }
-  
+
   delay(500);
 }
