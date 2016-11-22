@@ -8,6 +8,7 @@
 #include "Adafruit_MAX31855.h"
 #include <dht.h>
 //#include <SparkFunLSM9DS1.h>
+#include <NewPing.h>
 
 /**********************************GPS*****************************************/
 static const int RXPin = 10, TXPin = 8;
@@ -45,6 +46,13 @@ dht DHT;
 
 //#define DECLINATION 3.61965
 
+/**********************************Sonar***************************************/
+#define TRIGGER_PIN  35
+#define ECHO_PIN     37
+#define MAX_DISTANCE 200
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+
 /********************************SD Card***************************************/
 // SD chip select pin.
 const uint8_t chipSelect = 4;
@@ -73,7 +81,7 @@ void setup()
   }
 
   data.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY");
-  Serial.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY");
+  Serial.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY,PING");
 
   /////////////////// GPS ///////////////////
   ss.begin(GPSBaud);
@@ -139,6 +147,7 @@ void loop()
   Serial.print(thermocouple.readCelsius());
   Serial.print(",");
   Serial.print(DHT.humidity);
+  Serial.print(",");
   //Serial.print(",");
   //Serial.print(imu.calcGyro(imu.gx), 2);
   //Serial.print(",");
@@ -157,6 +166,7 @@ void loop()
   //Serial.print(imu.calcMag(imu.my), 2);
   //Serial.print(",");
   //Serial.println(imu.calcMag(imu.mz), 2);
+  Serial.print(sonar.ping_cm());
   Serial.println("");
 
   data.print(gps.time.value()); // Raw time in HHMMSSCC format (u32)
