@@ -80,7 +80,7 @@ void setup()
     sd.errorHalt("opening test.txt for write failed");
   }
 
-  data.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY");
+  data.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY,PING");
   Serial.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY,PING");
 
   /////////////////// GPS ///////////////////
@@ -190,6 +190,7 @@ void loop()
   data.print(thermocouple.readCelsius());
   data.print(",");
   data.print(DHT.humidity);
+  data.print(",");
   //data.print(",");
   //data.print(imu.calcGyro(imu.gx), 2);
   //data.print(",");
@@ -208,6 +209,7 @@ void loop()
   //data.print(imu.calcMag(imu.my), 2);
   //data.print(",");
   //data.println(imu.calcMag(imu.mz), 2);
+  data.print(sonar.ping_cm());
   data.println("");
 
 
