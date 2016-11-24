@@ -8,7 +8,6 @@
 #include "Adafruit_MAX31855.h"
 #include <dht.h>
 #include <SparkFunLSM9DS1.h>
-#include <NewPing.h>
 
 /**********************************GPS*****************************************/
 static const int RXPin = 10, TXPin = 8;
@@ -46,16 +45,6 @@ LSM9DS1 imu;
 
 #define DECLINATION 3.61965
 
-void serial_printAttitude(float, float, float, float, float, float);
-void data_printAttitude(float, float, float, float, float, float);
-
-/**********************************Sonar***************************************/
-#define TRIGGER_PIN  35
-#define ECHO_PIN     37
-#define MAX_DISTANCE 200
-
-NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
-
 /********************************SD Card***************************************/
 // SD chip select pin.
 const uint8_t chipSelect = 4;
@@ -76,12 +65,6 @@ void setupGyro()
     // [scale] sets the full-scale range of the gyroscope.
     // scale can be set to either 245, 500, or 2000
     imu.settings.gyro.scale = 2000; // Set scale to +/-2000dps
-    // [sampleRate] sets the output data rate (ODR) of the gyro
-    // sampleRate can be set between 1-6
-    // 1 = 14.9    4 = 238
-    // 2 = 59.5    5 = 476
-    // 3 = 119     6 = 952
-    imu.settings.gyro.sampleRate = 3; // 59.5Hz ODR
 }
 
 void setupAccel()
@@ -96,9 +79,6 @@ void setupAccel()
     // [scale] sets the full-scale range of the accelerometer.
     // accel scale can be 2, 4, 8, or 16
     imu.settings.accel.scale = 16; // Set accel scale to +/-16g.
-    // [highResEnable] enables or disables high resolution
-    // mode for the acclerometer.
-    imu.settings.accel.highResEnable = true; // Disable HR
 }
 
 void setupMag()
@@ -108,33 +88,9 @@ void setupMag()
     // [scale] sets the full-scale range of the magnetometer
     // mag scale can be 4, 8, 12, or 16
     imu.settings.mag.scale = 16; // Set mag scale to +/-16 Gs
-    // [sampleRate] sets the output data rate (ODR) of the
-    // magnetometer.
-    // mag data rate can be 0-7:
-    // 0 = 0.625 Hz  4 = 10 Hz
-    // 1 = 1.25 Hz   5 = 20 Hz
-    // 2 = 2.5 Hz    6 = 40 Hz
-    // 3 = 5 Hz      7 = 80 Hz
-    imu.settings.mag.sampleRate = 7; // Set OD rate to 80Hz
     // [tempCompensationEnable] enables or disables
     // temperature compensation of the magnetometer.
     imu.settings.mag.tempCompensationEnable = true;
-    // [XYPerformance] sets the x and y-axis performance of the
-    // magnetometer to either:
-    // 0 = Low power mode      2 = high performance
-    // 1 = medium performance  3 = ultra-high performance
-    imu.settings.mag.XYPerformance = 3; // Ultra-high perform.
-    // [ZPerformance] does the same thing, but only for the z
-    imu.settings.mag.ZPerformance = 3; // Ultra-high perform.
-    // [lowPowerEnable] enables or disables low power mode in
-    // the magnetometer.
-    imu.settings.mag.lowPowerEnable = false;
-    // [operatingMode] sets the operating mode of the
-    // magnetometer. operatingMode can be 0-2:
-    // 0 = continuous conversion
-    // 1 = single-conversion
-    // 2 = power down
-    imu.settings.mag.operatingMode = 0; // Continuous mode
 }
 
 void setupTemperature()
@@ -145,7 +101,7 @@ void setupTemperature()
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(230400);
 
 ///////////////// SD Card ///////////////////
   if (!sd.begin(chipSelect, SPI_FULL_SPEED)) {
@@ -156,8 +112,8 @@ void setup()
     sd.errorHalt("opening test.txt for write failed");
   }
 
-  data.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY,GX,GY,GZ,AX,AY,AZ,MX,MY,MZ,PITCH,ROLL,HEADING,PING");
-  Serial.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY,GX,GY,GZ,AX,AY,AZ,MX,MY,MZ,PITCH,ROLL,HEADING,PING");
+  data.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY,GX,GY,GZ,AX,AY,AZ,MX,MY,MZ");
+  Serial.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY,GX,GY,GZ,AX,AY,AZ,MX,MY,MZ");
 
   /////////////////// GPS ///////////////////
   ss.begin(GPSBaud);
@@ -185,10 +141,10 @@ void setup()
   imu.settings.device.mAddress = LSM9DS1_M;
   imu.settings.device.agAddress = LSM9DS1_AG;
 
-  setupGyro(); // Set up gyroscope parameters
-  setupAccel(); // Set up accelerometer parameters
-  setupMag(); // Set up magnetometer parameters
-  setupTemperature(); // Set up temp sensor parameter
+  setupGyro();          // Set up gyroscope parameters
+  setupAccel();         // Set up accelerometer parameters
+  setupMag();           // Set up magnetometer parameters
+  setupTemperature();   // Set up temp sensor parameter
 
   imu.begin();
 }
@@ -236,7 +192,7 @@ void loop()
   Serial.print(",");
   Serial.print(gps.speed.mph()); // Speed in miles per hour (double)
   Serial.print(",");
-  Serial.print(ssc.pressure() + 17.6);
+  Serial.print(ssc.pressure() + 27.6);
   Serial.print(",");
   Serial.print(thermocouple.readInternal());
   Serial.print(",");
@@ -261,10 +217,6 @@ void loop()
   Serial.print(imu.calcMag(imu.my), 2);
   Serial.print(",");
   Serial.print(imu.calcMag(imu.mz), 2);
-  Serial.print(",");
-  serial_printAttitude(imu.ax, imu.ay, imu.az, imu.mx, imu.my, imu.mz);
-  Serial.print(",");
-  Serial.print(sonar.ping_cm());
   Serial.println("");
 
   data.print(gps.time.value()); // Raw time in HHMMSSCC format (u32)
@@ -281,7 +233,7 @@ void loop()
   data.print(",");
   data.print(gps.speed.mph()); // Speed in miles per hour (double)
   data.print(",");
-  data.print(ssc.pressure() + 17.6);
+  data.print(ssc.pressure() + 27.6);
   data.print(",");
   data.print(thermocouple.readInternal());
   data.print(",");
@@ -306,12 +258,7 @@ void loop()
   data.print(imu.calcMag(imu.my), 2);
   data.print(",");
   data.print(imu.calcMag(imu.mz), 2);
-  data.print(",");
-  data_printAttitude(imu.ax, imu.ay, imu.az, imu.mx, imu.my, imu.mz);
-  data.print(",");
-  data.print(sonar.ping_cm());
   data.println("");
-
 
   if (!data.sync() || data.getWriteError()) {
     Serial.println("write error");
@@ -330,62 +277,4 @@ static void smartDelay(unsigned long ms)
     while (ss.available())
       gps.encode(ss.read());
   } while (millis() - start < ms);
-}
-
-void serial_printAttitude(float ax, float ay, float az, float mx, float my, float mz)
-{
-  float roll = atan2(ay, az);
-  float pitch = atan2(-ax, sqrt(ay * ay + az * az));
-
-  float heading;
-  if (my == 0)
-    heading = (mx < 0) ? 180.0 : 0;
-  else
-    heading = atan2(mx, my);
-
-  heading -= DECLINATION * PI / 180;
-
-  if (heading > PI) heading -= (2 * PI);
-  else if (heading < -PI) heading += (2 * PI);
-  else if (heading < 0) heading += 2 * PI;
-
-  // Convert everything from radians to degrees:
-  heading *= 180.0 / PI;
-  pitch *= 180.0 / PI;
-  roll  *= 180.0 / PI;
-
-  Serial.print(pitch, 2);
-  Serial.print(",");
-  Serial.print(roll, 2);
-  Serial.print(",");
-  Serial.print(heading, 2);
-}
-
-void data_printAttitude(float ax, float ay, float az, float mx, float my, float mz)
-{
-  float roll = atan2(ay, az);
-  float pitch = atan2(-ax, sqrt(ay * ay + az * az));
-
-  float heading;
-  if (my == 0)
-    heading = (mx < 0) ? 180.0 : 0;
-  else
-    heading = atan2(mx, my);
-
-  heading -= DECLINATION * PI / 180;
-
-  if (heading > PI) heading -= (2 * PI);
-  else if (heading < -PI) heading += (2 * PI);
-  else if (heading < 0) heading += 2 * PI;
-
-  // Convert everything from radians to degrees:
-  heading *= 180.0 / PI;
-  pitch *= 180.0 / PI;
-  roll  *= 180.0 / PI;
-
-  data.print(pitch, 2);
-  data.print(",");
-  data.print(roll, 2);
-  data.print(",");
-  data.print(heading, 2);
 }
