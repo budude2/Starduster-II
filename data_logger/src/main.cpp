@@ -8,6 +8,7 @@
 #include "Adafruit_MAX31855.h"
 #include <dht.h>
 #include <SparkFunLSM9DS1.h>
+#include <MemoryFree.h>
 
 /**********************************GPS*****************************************/
 static const int RXPin = 10, TXPin = 8;
@@ -113,7 +114,7 @@ void setup()
   }
 
   data.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY,GX,GY,GZ,AX,AY,AZ,MX,MY,MZ");
-  Serial.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY,GX,GY,GZ,AX,AY,AZ,MX,MY,MZ");
+  Serial.println("TIME,SATS,LATITUDE,LONGITUDE,ALT,COURSE,SPEED,PRESSURE,INTTEMP,EXTTEMP,HUMIDITY,GX,GY,GZ,AX,AY,AZ,MX,MY,MZ,FREEMEM");
 
   /////////////////// GPS ///////////////////
   ss.begin(GPSBaud);
@@ -152,8 +153,10 @@ void setup()
 /*********************************LOOP*****************************************/
 void loop()
 {
-  //  update pressure
+  //update pressure
   ssc.update();
+
+  delay(25);
 
   // update humidity
   DHT.read22(DHTPIN);
@@ -217,6 +220,8 @@ void loop()
   Serial.print(imu.calcMag(imu.my), 2);
   Serial.print(",");
   Serial.print(imu.calcMag(imu.mz), 2);
+  Serial.print(",");
+  Serial.print(freeMemory());
   Serial.println("");
 
   data.print(gps.time.value()); // Raw time in HHMMSSCC format (u32)
@@ -264,7 +269,7 @@ void loop()
     Serial.println("write error");
   }
 
-  smartDelay(500);
+  smartDelay(475);
 }
 
 // This custom version of delay() ensures that the gps object
