@@ -1,5 +1,3 @@
-![logo](https://raw.githubusercontent.com/txjacob/Starduster-II/master/patch.jpg)
-
 #Data units:
 
 Time: HHMMSS
